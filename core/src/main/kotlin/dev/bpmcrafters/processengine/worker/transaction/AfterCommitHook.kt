@@ -27,7 +27,7 @@ fun interface AfterCommitHook {
 
 /**
  * Marks a component (e.g. an idempotency registry) that needs an [AfterCommitHook] provided by the framework integration.
- * The hook is installed by the framework layer (Spring Boot starter, Quarkus extension) on the raw instance.
+ * The hook is installed by the framework integration on the raw instance.
  * @since 0.8.6
  */
 interface AfterCommitHookAware {

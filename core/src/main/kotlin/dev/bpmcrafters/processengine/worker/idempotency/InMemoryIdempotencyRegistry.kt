@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * I.e., don't use it in a clustered environment.
  *
  * If a transaction is active during registration, the registration is deferred until the transaction has been
- * committed, using the [afterCommitHook]. The hook is installed by the framework integration (Spring Boot starter,
- * Quarkus extension); without a framework integration the registration happens immediately.
+ * committed, using the [afterCommitHook]. The Spring Boot starter installs the hook;
+ * without a framework integration the registration happens immediately.
  */
 class InMemoryIdempotencyRegistry(
   override var afterCommitHook: AfterCommitHook = AfterCommitHook.IMMEDIATE

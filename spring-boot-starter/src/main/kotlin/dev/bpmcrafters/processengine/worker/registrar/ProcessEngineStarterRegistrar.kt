@@ -19,6 +19,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Lazy
 import org.springframework.transaction.support.TransactionTemplate
+import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -100,13 +101,26 @@ class ProcessEngineStarterRegistrar(
    * Calculates the retry information for a failed task.
    * @see ProcessEngineWorkerRegistrar.calculateRetry
    */
-  internal fun calculateRetry(taskInformation: TaskInformation, cause: Throwable): ProcessEngineWorkerRegistrar.FailureRetry =
-    registrar.calculateRetry(taskInformation, cause)
+  internal fun calculateRetry(taskInformation: TaskInformation, cause: Throwable): FailureRetry =
+    registrar.calculateRetry(taskInformation, cause).let { FailureRetry(it.retryCount, it.retryBackoff) }
 
   /**
    * Determines if the task should be completed before the commit of the transaction.
    * @see ProcessEngineWorkerRegistrar.completeBeforeCommit
    */
   internal fun completeBeforeCommit(complete: Completion): Boolean = registrar.completeBeforeCommit(complete)
+
+  /**
+   * Task handler as a function. Retained here for compatibility with existing consumers.
+   */
+  fun interface TaskHandlerWithResult : (TaskInformation, Map<String, Any?>) -> Any?
+
+  /**
+   * Failure retry information. Retained at its original nested class name.
+   */
+  data class FailureRetry(
+    val retryCount: Int?,
+    val retryBackoff: Duration?
+  )
 
 }

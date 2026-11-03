@@ -8,26 +8,26 @@
 
 ## Purpose of the library
 
-A small opinionated annotation-based worker library for the creation of external task workers using
-[Process Engine API](https://github.com/bpm-crafters/process-engine-api). The worker logic is framework-agnostic
-and is integrated into Spring Boot and Quarkus by thin framework modules: you write a class with a method
-annotated with `@ProcessEngineWorker`, the library subscribes it to the topic of the process engine adapter,
-resolves typed parameters, completes the task and handles transactions, BPMN errors, retries and idempotency.
+A small opinionated annotation-based Spring Boot worker implementation for creating
+external task workers using Process-Engine-API.
 
-## Supported frameworks
+## Module boundaries
 
-| Framework                | Artifact                                    | Notes                                                                                                                 |
-|--------------------------|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| Spring Boot              | `process-engine-worker-spring-boot-starter` | Auto-configuration, worker discovery via `BeanPostProcessor`, Spring transactions, process auto-deployment.           |
-| Quarkus                  | `process-engine-worker-quarkus`             | Quarkus extension, build-time worker discovery (Jandex/Arc), JTA transactions, native-image friendly. Status: preview. |
-| Plain Java / Kotlin      | `process-engine-worker-core`                | Framework-free registrar, annotations, resolvers and idempotency logic. Use it to integrate into any other runtime.    |
+* `core` contains the annotations, worker registration and invocation logic, conversion, retries, metrics,
+  idempotency interfaces, and configuration/transaction SPIs. It has no production Spring dependency.
+* `idempotency-registry-jpa` contains the shared `TaskLogEntry` entity and its Java serialization converter.
+  The entity schema and stored result format remain unchanged.
+* `spring-boot-starter` supplies Spring discovery, configuration and transaction adapters around the core.
+* `spring-boot-idempotency-registry-jpa` supplies the existing Spring Data repository and JPA registry.
 
-All artifacts share the group id `dev.bpm-crafters.process-engine-worker` and the same annotations, so a worker class
-looks the same in every framework.
+Existing package imports, Spring starter coordinates and configuration remain unchanged; the starters bring in
+the extracted modules transitively. This separation prepares for future framework integrations.
+A Quarkus adapter is deferred to a separate change and is not included here.
+
+See [worker usage](docs/process-engine-worker.md), [Spring Boot integration](docs/spring-boot.md), and
+[idempotency](docs/idempotency.md) for details.
 
 ## How to use
-
-### Spring Boot
 
 Add the following dependency to your project's class path:
 
@@ -75,7 +75,7 @@ public class MyWorker {
   @ProcessEngineWorker(topic = "fetchGoods", autoComplete = false)
   public void fetchGoods(
     TaskInformation taskInformation,
-    ServiceTaskCompletionApi serviceTaskCompletionApi,
+    ServiceTaskCompletionApi taskCompletionApi,
     VariableConverter variableConverter,
     Map<String, Object> processPayload
   ) {
@@ -85,45 +85,9 @@ public class MyWorker {
     var fetched = fetchGoodsInPort.fetchGoods(order);
 
     // complete the task using process engine API
-    serviceTaskCompletionApi.completeTask(
+    taskCompletionApi.completeTask(
       new CompleteTaskCmd(taskInformation.getTaskId(), () -> Map.of("shipped", fetched))
     ).get();
-  }
-}
-```
-
-### Quarkus
-
-Add the Quarkus extension to your project's class path (together with a Quarkus process engine adapter, e.g. the
-Camunda 8 Quarkus adapter of Process Engine API):
-
-```xml
-<dependency>
-  <groupId>dev.bpm-crafters.process-engine-worker</groupId>
-  <artifactId>process-engine-worker-quarkus</artifactId>
-</dependency>
-```
-
-Worker classes are discovered at build time. They need no scope annotation: every class with a
-`@ProcessEngineWorker` method automatically becomes an unremovable `@Singleton` bean.
-
-```java
-public class MySmartWorker {
-
-  private final FetchGoodsInPort fetchGoodsInPort;
-
-  public MySmartWorker(FetchGoodsInPort fetchGoodsInPort) {
-    this.fetchGoodsInPort = fetchGoodsInPort;
-  }
-
-  @ProcessEngineWorker("fetchGoods")
-  public Map<String, Object> fetchGoods(
-    @Variable(name = "order") Order order
-  ) {
-    // execute some business code
-    var fetched = fetchGoodsInPort.fetchGoods(order);
-
-    return Map.of("shipped", fetched);
   }
 }
 ```
@@ -150,13 +114,13 @@ on the annotation is `true` (defaults to `true`), the library will try to automa
 using the returned map as completion variables. If `autoComplete` is `true`, but no return value is provided, the task
 will be completed without empty payload. This functionality is provided by the `ResultResolver` based on registered strategies.
 
-If you want to throw a BPMN error, please throw an instance of a `BpmnErrorOccurred`.
+If you want to throw a BPMN error, throw an instance of `BpmnErrorOccurred`.
 
 ## Customizations
 
 You might want to register your own parameter resolution strategies. For this purpose, please construct 
 the parameter resolver bean on your own and register your own strategies. Your custom strategy must implement
-`ParameterResolutionStrategy` interface. In Spring Boot, expose it as a `@Bean`:
+`ParameterResolutionStrategy` interface:
 
 ```kotlin
 
@@ -171,22 +135,6 @@ class MyConfig {
   }
 }
 
-```
-
-In Quarkus, expose it with a CDI producer, which replaces the default bean provided by the extension:
-
-```java
-@Singleton
-public class MyConfig {
-
-  @Produces
-  @ApplicationScoped
-  public ParameterResolver myParameterResolver() {
-    return ParameterResolver.builder().addStrategy(
-      new MyCustomParameterResolutionStrategy()
-    ).build();
-  }
-}
 ```
 
 Optionally, you might want to register own result resolution strategies. For this purpose, please construct
@@ -211,20 +159,11 @@ class MyConfig {
 ```
 
 If you want to switch the entire library off (for example you are in the context of an integration test, and parts of your Process Engine API are deactivated),
-you can do it by setting the property `dev.bpm-crafters.process-api.worker.enabled` to `false`. This works in Spring Boot
-(`application.yml`) and in Quarkus (`application.properties`) alike.
-
-## Documentation
-
-* [Process Engine Worker](docs/process-engine-worker.md) - annotations, parameter and result resolution, transactions, configuration.
-* [Process Engine Worker with Spring Boot](docs/spring-boot.md) - Spring Boot starter specifics.
-* [Process Engine Worker with Quarkus](docs/quarkus.md) - Quarkus extension specifics.
-* [Idempotency Registry](docs/idempotency.md) - preventing duplicate worker invocations (in-memory and JPA).
-* [Process Deployment](docs/process-deployment.md) - automatic deployment of BPMN / DMN resources (Spring Boot).
+you can do it by setting the property `dev.bpm-crafters.process-api.worker.enabled` to `false`.
 
 ## Examples
 
-There is an `Order fulfillment` example (Spring Boot), you can easily try out. It follows the approach of 
+There is an `Order fulfillment` example you can try out. It follows the approach of
 clean architecture and uses Process Engine API and Process Engine Worker libraries. 
 To run it, you have several options:
 
@@ -260,5 +199,3 @@ HTTP client tests using your IntelliJ, located in the example directory.
 Don't forget to first deploy the process! 
 Either manually via operate / modeler, or with the HTTP client script: 
 c8-deploy-process.http
-
-A Quarkus example application will follow as soon as the Camunda 8 Quarkus adapter of Process Engine API is released.

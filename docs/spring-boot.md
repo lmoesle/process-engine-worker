@@ -90,9 +90,10 @@ The property `register-process-workers` is deprecated and not evaluated, use `en
 ## Transactions
 
 Annotate the worker method or class with `@org.springframework.transaction.annotation.Transactional` or
-`@jakarta.transaction.Transactional`. The starter executes the worker method and the task completion in one transaction
-via a `TransactionTemplate` bound to the application's `PlatformTransactionManager`. Applications without a transaction
-manager start normally, as long as no transactional worker is invoked.
+`@jakarta.transaction.Transactional`. The starter executes transactional workers via a `TransactionTemplate` bound to
+the application's `PlatformTransactionManager`. By default, task completion happens after commit. Set the worker's
+`completion = BEFORE_COMMIT` or the global `complete-tasks-before-commit=true` to include completion in the transaction.
+Applications without a transaction manager start normally, as long as no transactional worker is invoked.
 
 ## Customization
 

@@ -28,12 +28,6 @@
     <micrometer.version>1.15.12</micrometer.version>
     <jakarta.transaction-api.version>2.0.1</jakarta.transaction-api.version>
     <jakarta.persistence-api.version>3.1.0</jakarta.persistence-api.version>
-    <hibernate.version>6.6.53.Final</hibernate.version>
-    <h2.version>2.3.232</h2.version>
-    <slf4j.version>2.0.18</slf4j.version>
-    <!-- QUARKUS -->
-    <quarkus.version>3.38.1</quarkus.version>
-    <jandex-maven-plugin.version>3.2.7</jandex-maven-plugin.version>
     <!-- TEST -->
     <mockito.version>6.4.0</mockito.version>
     <assertj.version>3.27.7</assertj.version>
@@ -46,7 +40,6 @@
     <module>idempotency-registry-jpa</module>
     <module>spring-boot-starter</module>
     <module>spring-boot-idempotency-registry-jpa</module>
-    <module>quarkus</module>
   </modules>
 
   <dependencyManagement>

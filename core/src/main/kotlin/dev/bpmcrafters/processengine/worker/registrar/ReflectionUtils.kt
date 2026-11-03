@@ -22,11 +22,9 @@ import kotlin.reflect.KClass
 private val converters = ConcurrentHashMap<KClass<out VariableConverter>, VariableConverter>()
 
 /**
- * Names of marker interfaces of generated subclasses / proxies of known CDI / AOP containers.
+ * Names of marker interfaces of generated Spring AOP proxies.
  */
 private val GENERATED_SUBCLASS_MARKERS = setOf(
-  "io.quarkus.arc.Subclass",
-  "io.quarkus.arc.ClientProxy",
   "org.springframework.aop.SpringProxy",
 )
 
@@ -166,7 +164,7 @@ fun Method.hasVoidReturnType() = Void.TYPE == this.returnType
 
 /**
  * Retrieves list of worker methods of the given bean.
- * If the bean is an instance of a generated subclass (proxy of a CDI / AOP container), the user class is used instead.
+ * If the bean is an instance of a generated AOP subclass, the user class is used instead.
  * Frameworks knowing the target class should prefer [Class.getAnnotatedWorkers].
  */
 fun Any.getAnnotatedWorkers(): List<Method> = this.javaClass.unwrapGeneratedSubclass().getAnnotatedWorkers()
@@ -180,7 +178,7 @@ fun Class<*>.getAnnotatedWorkers(): List<Method> = this
   .filter { m -> m.isAnnotationPresent(ProcessEngineWorker::class.java) }
 
 /**
- * Unwraps generated subclasses (CGLIB / Arc proxies and intercepted subclasses) to the user class.
+ * Unwraps generated subclasses (such as CGLIB proxies) to the user class.
  * @return user class.
  * @since 0.8.6
  */

@@ -21,7 +21,7 @@ private val logger = KotlinLogging.logger {}
 
 /**
  * Framework-independent registrar responsible for collecting process engine workers of a bean and creating
- * corresponding external task subscriptions. Framework integrations (Spring Boot starter, Quarkus extension)
+ * corresponding external task subscriptions. Framework integrations (such as the Spring Boot starter)
  * discover the beans and delegate to this class.
  *
  * @param configuration worker configuration.

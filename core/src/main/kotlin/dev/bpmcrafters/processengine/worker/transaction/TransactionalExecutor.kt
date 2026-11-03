@@ -3,7 +3,7 @@ package dev.bpmcrafters.processengine.worker.transaction
 /**
  * Abstraction of the transaction management used by the worker registrar to execute transactional workers.
  *
- * Implementations are provided by the framework integration (Spring `TransactionTemplate`, Quarkus `QuarkusTransaction`).
+ * Implementations are provided by the framework integration (e.g. Spring `TransactionTemplate`).
  * @since 0.8.6
  */
 interface TransactionalExecutor : AfterCommitHook {
