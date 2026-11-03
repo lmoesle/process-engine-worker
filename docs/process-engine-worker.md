@@ -2,6 +2,8 @@
 title: Process Engine Worker
 ---
 
+Framework integration: [Spring Boot](spring-boot.md) · [Quarkus](quarkus.md).
+
 Process Engine Worker is an independent component built on top of Process Engine API in order to accelerate the development of agnostic workers
 for any process engine supported by Process Engine API in Spring Boot ecosystem. By doing so, it abstracts from specific worker clients and
 API and allows to build universal workers.

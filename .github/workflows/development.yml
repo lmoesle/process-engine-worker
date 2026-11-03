@@ -42,6 +42,12 @@ jobs:
       - name: Build with Maven
         run: ./mvnw clean verify -U -B -ntp -T4
 
+      - name: Install validated Quarkus extension for packaged consumer
+        run: ./mvnw -B -ntp -DskipTests -DskipExamples -DskipITests -pl :process-engine-worker-quarkus-deployment -am install
+
+      - name: Verify packaged Quarkus JVM consumer
+        run: ./mvnw -B -ntp -f quarkus/integration-tests/minimal/pom.xml clean verify
+
 #      - name: Upload coverage to Codecov
 #        if: github.event_name == 'push' && github.actor != 'dependabot[bot]'
 #        uses: codecov/codecov-action@v1.0.2

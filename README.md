@@ -163,6 +163,9 @@ you can do it by setting the property `dev.bpm-crafters.process-api.worker.enabl
 
 ## Examples
 
+For Quarkus dependencies, CDI workers, configuration, and integration limits, see the
+[Quarkus guide](docs/quarkus.md).
+
 There is an `Order fulfillment` example you can try out. It follows the approach of
 clean architecture and uses Process Engine API and Process Engine Worker libraries. 
 To run it, you have several options:
